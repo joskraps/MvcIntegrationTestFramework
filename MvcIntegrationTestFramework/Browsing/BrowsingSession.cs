@@ -21,12 +21,12 @@ namespace MvcIntegrationTestFramework.Browsing
 
         public RequestResult Get(string url)
         {
-            return this.Get(url, "");
+            return Get(url, "");
         }
 
         public RequestResult Get(string url, string acceptHeader)
         {
-            return this.Get(url, acceptHeader, "", "");
+            return Get(url, acceptHeader, "", "");
         }
 
         public RequestResult Get(string url, string acceptHeader, string authorizeUsername, string authorizePassword)
@@ -56,12 +56,17 @@ namespace MvcIntegrationTestFramework.Browsing
         /// </example>
         public RequestResult Post(string url, object formData)
         {
-            return this.Post(url, formData, "");
+            return Post(url, formData, "");
+        }
+
+        public RequestResult Post(string url, object formData, NameValueCollection headers)
+        {
+            return ProcessRequest(url, HttpVerbs.Post, formData, headers);
         }
 
         public RequestResult Post(string url, object formData, string acceptHeader)
         {
-            return this.Post(url, formData, acceptHeader, "", "");
+            return Post(url, formData, acceptHeader, "", "");
         }
 
         public RequestResult Post(string url, object formData, string acceptHeader, string authorizeUsername, string authorizePassword)
@@ -71,12 +76,12 @@ namespace MvcIntegrationTestFramework.Browsing
 
         public RequestResult Delete(string url)
         {
-            return this.Delete(url, "");
+            return Delete(url, "");
         }
 
         public RequestResult Delete(string url, string acceptHeader)
         {
-            return this.Delete(url, acceptHeader, "", "");
+            return Delete(url, acceptHeader, "", "");
         }
 
         public RequestResult Delete(string url, string acceptHeader, string authorizeUsername, string authorizePassword)
@@ -87,7 +92,7 @@ namespace MvcIntegrationTestFramework.Browsing
         private RequestResult ProcessRequest(string url, HttpVerbs httpVerb, object formData, string acceptHeader, string authorizeUsername, string authorizePassword)
         {
 
-            NameValueCollection headers = new NameValueCollection();
+            var headers = new NameValueCollection();
             if (!String.IsNullOrEmpty(acceptHeader))
             {
                 headers.Add("Accept", acceptHeader);
@@ -104,8 +109,10 @@ namespace MvcIntegrationTestFramework.Browsing
 
         }
 
-        private RequestResult ProcessRequest(string url, HttpVerbs httpVerb, NameValueCollection formValues, NameValueCollection headers)
+        private RequestResult ProcessRequest(string url, HttpVerbs httpVerb, object formValues, NameValueCollection headers)
         {
+            var formNameValueCollection = NameValueCollectionConversions.ConvertFromObject(formValues);
+
             if (url == null)
             {
                 throw new ArgumentNullException("url");
@@ -118,8 +125,8 @@ namespace MvcIntegrationTestFramework.Browsing
                 url = url.Substring(1);
 
             // Parse out the querystring if provided
-            string query = "";
-            int querySeparatorIndex = url.IndexOf("?");
+            var query = "";
+            var querySeparatorIndex = url.IndexOf("?", StringComparison.Ordinal);
             if (querySeparatorIndex >= 0)
             {
                 query = url.Substring(querySeparatorIndex + 1);
@@ -129,8 +136,8 @@ namespace MvcIntegrationTestFramework.Browsing
             // Perform the request
             LastRequestData.Reset();
             var output = new StringWriter();
-            string httpVerbName = httpVerb.ToString().ToLower();
-            var workerRequest = new SimulatedWorkerRequest(url, query, output, Cookies, httpVerbName, formValues, headers);
+            var httpVerbName = httpVerb.ToString().ToLower();
+            var workerRequest = new SimulatedWorkerRequest(url, query, output, Cookies, httpVerbName, formNameValueCollection, headers);
             HttpRuntime.ProcessRequest(workerRequest);
 
             // Capture the output
@@ -150,13 +157,12 @@ namespace MvcIntegrationTestFramework.Browsing
             if (LastRequestData.Response == null)
                 return;
 
-            HttpCookieCollection lastResponseCookies = LastRequestData.Response.Cookies;
-            if (lastResponseCookies == null)
-                return;
+            var lastResponseCookies = LastRequestData.Response.Cookies;
+
 
             foreach (string cookieName in lastResponseCookies)
             {
-                HttpCookie cookie = lastResponseCookies[cookieName];
+                var cookie = lastResponseCookies[cookieName];
                 if (Cookies[cookieName] != null)
                     Cookies.Remove(cookieName);
                 if ((cookie.Expires == default(DateTime)) || (cookie.Expires > DateTime.Now))

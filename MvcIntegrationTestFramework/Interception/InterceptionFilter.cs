@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using System.Web;
 using System.Web.Mvc;
@@ -19,7 +20,7 @@ namespace MvcIntegrationTestFramework.Interception
         static InterceptionFilter()
         {
             staticDescriptorCacheInstance = typeof(ControllerActionInvoker).GetField("_staticDescriptorCache", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
-            fetchOrCreateItemMethod = staticDescriptorCacheInstance.GetType().GetMethod("FetchOrCreateItem", BindingFlags.NonPublic | BindingFlags.Instance);
+            fetchOrCreateItemMethod = staticDescriptorCacheInstance.GetType().GetMethod("FetchOrCreateItem", BindingFlags.NonPublic | BindingFlags.Instance, Type.DefaultBinder, new[] { typeof(Type), typeof(Func<ControllerDescriptor>) }, null);
         }
 
         public static void AssociateWithControllerType(Type controllerType)

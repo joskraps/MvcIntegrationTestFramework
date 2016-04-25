@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Web.Mvc;
 
@@ -13,13 +16,15 @@ namespace MvcIntegrationTestFramework.Interception
         {
         }
 
+        [Obsolete]
         public override FilterInfo GetFilters()
         {
-            var usualFilters = base.GetFilters();
+            var test = new FilterInfo();
             var interceptionFilter = new InterceptionFilter();
-            usualFilters.ActionFilters.Insert(0, interceptionFilter);
-            usualFilters.ResultFilters.Insert(0, interceptionFilter);
-            return usualFilters;
+            test.ActionFilters.Insert(0, interceptionFilter);
+            test.ResultFilters.Insert(0, interceptionFilter);
+
+            return test;
         }
     }
 }
